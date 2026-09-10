@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>라즈베리파이5 · Ubuntu Server 24.04 설정 가이드 (Windows)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EEF1EC;
+    --sheet:#FAFBF8;
+    --ink:#1C2B24;
+    --muted:#5B6B62;
+    --line:#CBD3CC;
+    --pcb:#1F6B4F;
+    --pcb-soft:#DCE9E1;
+    --copper:#B8733A;
+    --copper-soft:#F5E6D6;
+    --term:#16211C;
+    --term-ink:#D8E6DC;
+    --term-dim:#7F958A;
+    --radius-s:4px;
+    --radius-m:10px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+  body{
+    margin:0;background:var(--paper);color:var(--ink);
+    font-family:"IBM Plex Sans KR",system-ui,sans-serif;
+    font-size:16px;line-height:1.7;
+    -webkit-font-smoothing:antialiased;
+  }
+  code,pre,.mono{font-family:"JetBrains Mono",ui-monospace,monospace}
+  a{color:var(--pcb)}
+  :focus-visible{outline:3px solid var(--copper);outline-offset:2px}
+
+  /* ---------- Header / spec plate ---------- */
+  header{
+    max-width:1120px;margin:0 auto;padding:56px 24px 32px;
+  }
+  .title-row{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px 32px;justify-content:space-between}
+  h1{
+    font-size:clamp(28px,4.2vw,44px);line-height:1.2;margin:0;font-weight:700;letter-spacing:-0.02em;
+    max-width:18ch;
+  }
+  .sub{color:var(--muted);margin:10px 0 0;max-width:60ch}
+
+  .plate{
+    margin-top:32px;background:var(--pcb);color:#EAF4EE;border-radius:var(--radius-m);
+    padding:22px 24px 24px;position:relative;overflow:hidden;
+  }
+  /* mounting holes */
+  .plate::before,.plate::after{
+    content:"";position:absolute;width:12px;height:12px;border-radius:50%;
+    background:var(--paper);box-shadow:0 0 0 3px #C9A15F;top:12px;
+  }
+  .plate::before{left:12px}.plate::after{right:12px}
+  .plate h2{font-size:15px;font-weight:600;margin:0 0 14px;padding-left:22px;color:#CFE3D7}
+  .specs{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:rgba(255,255,255,.16);border-radius:var(--radius-s);overflow:hidden}
+  .spec{background:var(--pcb);padding:12px 14px}
+  .spec .k{font-size:12.5px;color:#A9CBB8}
+  .spec .v{font-family:"JetBrains Mono",monospace;font-size:15px;font-weight:600;word-break:break-all;min-height:1.7em}
+  .spec .v-user:empty + .v-sep{display:none}  /* 사용자 이름을 아직 안 넣었으면 구분선 " / "도 숨김 */
+  .inputs{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:18px}
+  .inputs label{display:block;font-size:13.5px;color:#CFE3D7;margin-bottom:6px}
+  .inputs input{
+    width:100%;font:600 16px "JetBrains Mono",monospace;padding:10px 12px;border-radius:var(--radius-s);
+    border:2px solid #C9A15F;background:#F7F3EA;color:var(--ink);
+  }
+  .inputs .hint{font-size:12.5px;color:#A9CBB8;margin-top:6px}
+  .inputs-cue{margin:22px 0 -4px;font-size:15px;font-weight:700;color:#FF8A80;letter-spacing:-0.01em;text-align:center}
+  .inputs-cue .arrow{font-family:"JetBrains Mono",monospace;margin-left:6px}
+  .inputs.inline{background:var(--pcb);border-radius:var(--radius-m);padding:16px 18px;max-width:68ch;margin:10px 0 14px}
+  .classroom{display:inline-block;margin:12px 0 0;padding:6px 12px;border:2px solid var(--copper);background:var(--copper-soft);border-radius:var(--radius-s);font-weight:600;font-size:15px}
+
+  /* ---------- Layout ---------- */
+  .wrap{max-width:1120px;margin:0 auto;padding:0 24px 80px;display:grid;grid-template-columns:220px 1fr;gap:40px}
+  nav.rail{position:sticky;top:24px;align-self:start;font-size:14px}
+  nav.rail p{font-weight:600;margin:0 0 6px;color:var(--muted);font-size:13px}
+  nav.rail ol{list-style:none;margin:0 0 20px;padding:0;border-left:2px solid var(--line)}
+  nav.rail li a{display:block;padding:4px 0 4px 14px;margin-left:-2px;border-left:2px solid transparent;color:var(--ink);text-decoration:none}
+  nav.rail li a:hover{border-left-color:var(--pcb);color:var(--pcb)}
+  main{min-width:0}
+
+  section.part{margin-bottom:56px}
+  .part-head{display:flex;align-items:baseline;gap:14px;border-bottom:2px solid var(--ink);padding-bottom:8px;margin-bottom:24px}
+  .part-head .tag{font:600 13px "JetBrains Mono",monospace;background:var(--ink);color:var(--paper);padding:2px 8px;border-radius:var(--radius-s)}
+  .part-head h2{margin:0;font-size:24px;letter-spacing:-0.01em}
+
+  .step{display:grid;grid-template-columns:44px 1fr;gap:0 16px;margin-bottom:34px}
+  .num{
+    width:44px;height:44px;border-radius:50%;border:2px solid var(--pcb);color:var(--pcb);
+    display:grid;place-items:center;font:600 16px "JetBrains Mono",monospace;background:var(--sheet);
+  }
+  .step h3{margin:6px 0 8px;font-size:19px;line-height:1.4}
+  .step p{margin:0 0 12px;max-width:68ch}
+  .step ul{margin:0 0 12px;padding-left:20px;max-width:68ch}
+  .step li{margin-bottom:4px}
+
+  /* ---------- Terminal blocks ---------- */
+  .term{background:var(--term);color:var(--term-ink);border-radius:var(--radius-m);margin:8px 0 14px;overflow:hidden}
+  .term-bar{display:flex;justify-content:space-between;align-items:center;padding:8px 12px 8px 16px;border-bottom:1px solid #25332C;font-size:12.5px;color:var(--term-dim)}
+  .term pre{margin:0;padding:14px 16px 16px;overflow-x:auto;font-size:13.8px;line-height:1.65;white-space:pre}
+  .term .c{color:var(--term-dim)}
+  .copy{
+    font:500 12.5px "IBM Plex Sans KR",sans-serif;background:transparent;color:var(--term-ink);
+    border:1px solid #3A4B42;border-radius:var(--radius-s);padding:3px 10px;cursor:pointer;
+  }
+  .copy:hover{border-color:var(--term-ink)}
+  .copy.done{background:var(--pcb);border-color:var(--pcb)}
+  .ph{color:var(--copper);font-weight:600}
+  .ph.set{color:var(--pcb)}
+  .term .ph{color:#F2C58C}
+  .term .ph.set{color:#9FE0B8}
+
+  /* prompt block */
+  .prompt .term pre{white-space:pre-wrap;word-break:break-word;font-size:13.5px;max-height:520px;overflow-y:auto}
+
+  /* ---------- Callouts ---------- */
+  .note{border-left:4px solid var(--pcb);background:var(--pcb-soft);padding:10px 14px;border-radius:0 var(--radius-s) var(--radius-s) 0;margin:0 0 14px;max-width:68ch}
+  .warn{border-left:4px solid var(--copper);background:var(--copper-soft);padding:10px 14px;border-radius:0 var(--radius-s) var(--radius-s) 0;margin:0 0 14px;max-width:68ch}
+  .note b,.warn b{font-weight:600}
+
+  .check{list-style:none;padding-left:0 !important}
+  .check li{position:relative;padding-left:28px}
+  .check li::before{content:"";position:absolute;left:2px;top:6px;width:14px;height:14px;border:2px solid var(--pcb);border-radius:3px}
+
+  kbd{font:600 13px "JetBrains Mono",monospace;background:var(--sheet);border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:1px 6px}
+  code.inline{font-size:.9em;background:var(--sheet);border:1px solid var(--line);border-radius:4px;padding:1px 5px}
+
+  /* ---------- Troubleshooting ---------- */
+  details{background:var(--sheet);border:1px solid var(--line);border-radius:var(--radius-s);margin-bottom:8px}
+  summary{cursor:pointer;padding:12px 16px;font-weight:600;list-style:none;display:flex;gap:10px;align-items:baseline}
+  summary::-webkit-details-marker{display:none}
+  summary::before{content:"+";font-family:"JetBrains Mono",monospace;color:var(--copper);width:12px}
+  details[open] summary::before{content:"−"}
+  details .body{padding:0 16px 14px 38px}
+  details .body p{margin:0 0 10px;max-width:68ch}
+
+  footer{max-width:1120px;margin:0 auto;padding:0 24px 48px;color:var(--muted);font-size:14px}
+
+  @media (max-width:860px){
+    .wrap{grid-template-columns:1fr}
+    nav.rail{position:static;background:var(--sheet);border:1px solid var(--line);border-radius:var(--radius-s);padding:14px 16px}
+    nav.rail ol{margin-bottom:12px}
+    .step{grid-template-columns:34px 1fr;gap:0 12px}
+    .num{width:34px;height:34px;font-size:14px}
+  }
+  @media print{
+    nav.rail,.copy,.inputs,.inputs-cue{display:none}
+    .wrap{grid-template-columns:1fr}
+    .term pre{white-space:pre-wrap}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="title-row">
+    <div>
+      <h1>라즈베리파이5에 Ubuntu Server 올리고 노트북에서 접속하기</h1>
+      <p class="classroom">강의실 비밀번호: 0603*</p>
+      <p class="sub">Claude Code로 SD카드를 준비하고, 첫 부팅 후 고정 IP로 SSH 접속하기까지의 전체 과정입니다. 노트북은 Windows 11(PowerShell) 기준입니다. Mac을 쓴다면 <a href="rpi5_ubuntu_setup_guide_mac.html">macOS 버전</a>을 보세요.</p>
+    </div>
+  </div>
+
+  <div class="plate" aria-label="설정값">
+    <h2>이번 설정값</h2>
+    <div class="specs">
+      <div class="spec"><div class="k">보드</div><div class="v">Pi 5 (8GB)</div></div>
+      <div class="spec"><div class="k">OS</div><div class="v">Ubuntu 24.04</div></div>
+      <div class="spec"><div class="k">Hostname</div><div class="v"><span class="v-host">ras</span></div></div>
+      <div class="spec"><div class="k">사용자 / 비밀번호</div><div class="v"><span class="v-user">ras</span><span class="v-sep"> / </span><span class="v-pass">ras</span></div></div>
+      <div class="spec"><div class="k">Wi-Fi</div><div class="v">IOTCOSS1_5G</div></div>
+      <div class="spec"><div class="k">Wi-Fi 비밀번호</div><div class="v">Coss0603</div></div>
+    </div>
+    <div class="inputs-cue">입력하는 창 <span class="arrow">↓</span></div>
+    <div class="inputs">
+      <div>
+        <label for="hostInput">Hostname</label>
+        <input id="hostInput" placeholder="예: ras" autocomplete="off" spellcheck="false">
+        <div class="hint">라즈베리파이에 붙일 이름입니다. 영문 소문자·숫자·하이픈만 됩니다.</div>
+      </div>
+      <div>
+        <label for="userInput">사용자 이름</label>
+        <input id="userInput" placeholder="예: ras" autocomplete="off" spellcheck="false">
+        <div class="hint">SSH로 로그인할 계정 이름입니다.</div>
+      </div>
+      <div>
+        <label for="passInput">비밀번호</label>
+        <input id="passInput" placeholder="예: ras" autocomplete="off" spellcheck="false">
+        <div class="hint">첫 로그인용입니다. 접속 후 더 긴 것으로 바꾸는 걸 권합니다.</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <nav class="rail" aria-label="목차">
+    <p>SD카드 준비</p>
+    <ol>
+      <li><a href="#s1">1. 준비하기</a></li>
+      <li><a href="#s2">2. 프롬프트 입력</a></li>
+      <li><a href="#s3">3. 이미지 검증</a></li>
+      <li><a href="#s4">4. 고정 IP 승인</a></li>
+      <li><a href="#s5">5. SD카드 확인</a></li>
+      <li><a href="#s6">6. 이미지 기록</a></li>
+      <li><a href="#s7">7. 설정 확인·꺼내기</a></li>
+    </ol>
+    <p>부팅과 접속</p>
+    <ol>
+      <li><a href="#s8">8. 첫 부팅</a></li>
+      <li><a href="#s9">9. SSH 접속</a></li>
+      <li><a href="#s10">10. 접속 후 점검</a></li>
+    </ol>
+    <p>그 밖에</p>
+    <ol>
+      <li><a href="#trouble">문제 해결</a></li>
+      <li><a href="#gui">대안: Imager 설정만 쓰기</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <!-- ================= PART A ================= -->
+    <section class="part">
+      <div class="part-head"><span class="tag">A</span><h2>SD카드 준비 (Claude Code)</h2></div>
+
+      <div class="step" id="s1">
+        <div class="num">1</div>
+        <div>
+          <h3>준비하기</h3>
+          <ul class="check">
+            <li>노트북을 <b>IOTCOSS1_5G</b>에 연결합니다. 고정 IP 대역을 이 네트워크에서 읽어오기 때문입니다.</li>
+            <li>VPN이 켜져 있다면 끕니다. 네트워크 정보가 틀리게 읽힐 수 있습니다.</li>
+            <li>microSD 카드를 노트북(또는 카드 리더기)에 꽂습니다. 카드 안의 데이터는 전부 지워집니다.</li>
+            <li><b>PowerShell 창을 두 개</b> 준비합니다. 하나는 Claude Code용, 하나는 명령을 직접 실행할 용도입니다. Windows Terminal을 쓰면 탭으로 나눌 수 있어 편합니다.</li>
+            <li>Raspberry Pi Imager를 설치합니다. 이미 있으면 넘어갑니다.</li>
+          </ul>
+          <div class="term"><div class="term-bar"><span>PowerShell</span><button class="copy">복사</button></div>
+<pre>winget install -e --id RaspberryPiFoundation.RaspberryPiImager</pre></div>
+          <div class="note">이미지 기록(굽기)은 Claude Code가 아니라 <b>Imager 프로그램으로 직접</b> 합니다. Windows에서 명령으로 디스크에 직접 쓰는 것보다 훨씬 안전하고, 실수로 다른 디스크를 지울 위험이 거의 없습니다.</div>
+        </div>
+      </div>
+
+      <div class="step" id="s2">
+        <div class="num">2</div>
+        <div>
+          <h3>Claude Code 실행 후 프롬프트 입력</h3>
+          <p>첫 번째 PowerShell 창에서 작업 폴더를 만들고 Claude Code를 실행합니다.</p>
+          <div class="term"><div class="term-bar"><span>PowerShell 1</span><button class="copy">복사</button></div>
+<pre>New-Item -ItemType Directory -Force "$env:USERPROFILE\rpi-setup" | Out-Null
+cd "$env:USERPROFILE\rpi-setup"
+claude</pre></div>
+          <p>아래 프롬프트를 그대로 붙여 넣습니다. 도중에 Claude Code가 명령 실행 권한을 물으면 내용을 읽어 보고 허용하면 됩니다.</p>
+          <div class="prompt">
+            <div class="term"><div class="term-bar"><span>최종 프롬프트</span><button class="copy">복사</button></div>
+<pre id="finalPrompt">라즈베리파이5(8GB)용 SD카드를 Ubuntu Server 24.04로 준비해줘.
+노트북은 Windows 11이고 PowerShell을 쓸 거야. SD카드는 이미 꽂혀 있어.
+작업 폴더는 %USERPROFILE%\rpi-setup 이야.
+
+[안전 규칙 - 반드시 지킬 것]
+1. `Get-Disk | Where-Object BusType -in 'USB','SD'`로 SD카드 후보를 보여주고
+   디스크 번호, 용량, 이름을 정리해줘. 내가 확인해줄게.
+2. 시스템 디스크(보통 0번, C: 드라이브가 있는 디스크)는 어떤 경우에도 건드리지 마.
+3. Clear-Disk, Format-Volume, diskpart, dd 처럼 디스크 전체를 바꾸는 명령은 절대 직접 실행하지 마.
+   이미지 기록은 내가 Raspberry Pi Imager로 직접 할 거야.
+4. 관리자 권한이 필요한 명령은 실행하지 말고 완성된 명령어만 알려줘.
+   내가 별도 PowerShell 창에서 실행하고 "완료"라고 알려줄게.
+
+[1단계: 이미지 준비]
+- https://cdimage.ubuntu.com/releases/24.04/release/ 에서 최신
+  ubuntu-24.04.x-preinstalled-server-arm64+raspi.img.xz 를 작업 폴더에 받아줘 (curl.exe -L -O 사용).
+- 같은 위치의 SHA256SUMS 값과 `Get-FileHash -Algorithm SHA256` 결과를 비교해서 보여줘.
+  불일치하면 중단해.
+
+[2단계: 고정 IP 결정]
+- 노트북은 지금 IOTCOSS1_5G에 연결되어 있어.
+  `Get-NetIPConfiguration -Detailed`로 노트북 IP, 프리픽스 길이, 게이트웨이, DNS를 확인해서 보여줘.
+- 같은 대역에서 끝자리가 높은 번호(예: .200)를 고정 IP 후보로 제안하고,
+  `Test-Connection -Count 2 후보IP`와 `arp -a`로 이미 쓰고 있지 않은지 확인해줘.
+- 내가 승인하면 그 IP로 확정해.
+
+[3단계: 기록 방법 안내]
+- 기록은 내가 Raspberry Pi Imager로 직접 할게. 아래를 순서대로 안내해줘.
+  - 장치: Raspberry Pi 5
+  - 운영체제: 목록 맨 아래 "Use custom"(사용자 지정 이미지 사용) -&gt; 받은 .img.xz 선택
+  - 저장소: 위에서 확인한 SD카드 (용량과 이름을 대조해서 알려줘)
+  - "OS 사용자 지정 설정을 적용하시겠어요?"가 나오면 반드시 "설정 없이 계속"을 고를 것.
+    cloud-init 파일은 네가 직접 쓸 거니까 Imager 설정과 겹치면 안 돼.
+  - 기록이 끝나면 Imager가 카드를 빼기 때문에, 카드를 뺐다가 다시 꽂아야 한다는 것
+- Imager가 설치되어 있지 않으면 winget 설치 명령을 알려줘.
+
+[4단계: cloud-init 설정 파일 작성]
+- 내가 "완료"라고 하면 `Get-Volume -FileSystemLabel system-boot`로 드라이브 문자를 찾아줘.
+- 기존 user-data, network-config는 작업 폴더의 backup\ 에 백업한 뒤 아래 내용으로 교체해줘.
+- 두 파일 모두 줄바꿈은 LF, 인코딩은 BOM 없는 UTF-8로 저장해줘.
+  Windows 기본 방식(CRLF, BOM)으로 저장하면 첫 부팅이 실패할 수 있어.
+  CR을 제거한 문자열을 만들어서
+  [IO.File]::WriteAllText($경로, $내용, (New-Object System.Text.UTF8Encoding $false)) 방식으로 써줘.
+
+user-data (첫 줄은 정확히 #cloud-config):
+- hostname: <span class="ph v-host">ras</span>, manage_etc_hosts: true
+- timezone: Asia/Seoul
+- users: 사용자 <span class="ph v-user">ras</span> 하나만 생성 (기본 ubuntu 사용자는 만들지 마)
+  - plain_text_passwd: <span class="ph v-pass">ras</span>, lock_passwd: false
+  - groups: adm, sudo, dialout, plugdev, video / shell: /bin/bash
+- chpasswd: expire: false (첫 로그인 때 비밀번호 변경을 강제하지 않음)
+- ssh_pwauth: true (SSH 비밀번호 로그인 허용)
+- package_update: true, packages: [avahi-daemon] (<span class="ph v-host">ras</span>.local 이름으로 접속하기 위함)
+
+network-config (netplan v2 형식):
+- wifis 아래 wlan0, dhcp4: false
+- addresses: [확정IP/프리픽스]
+- routes: to: default, via: 게이트웨이 (gateway4는 deprecated라 사용 금지)
+- nameservers: 게이트웨이, 8.8.8.8
+- regulatory-domain: KR
+- access-points: "IOTCOSS1_5G", password: "Coss0603"
+
+[5단계: 검증 및 마무리]
+- 작성한 user-data와 network-config 전체 내용을 보여주고 YAML 문법을 검사해줘.
+  (시스템 Python에 패키지를 직접 설치하지 말고, 필요하면 임시 가상환경을 써)
+- 두 파일에 CR(0x0D)과 BOM이 없는지 확인해서 보여줘.
+- 문제가 없으면 `Write-VolumeCache -DriveLetter &lt;문자&gt;`로 저장을 마무리하고,
+  파일 탐색기에서 드라이브를 우클릭 -&gt; 꺼내기 하라고 알려줘.
+- 마지막에 확정된 고정 IP와 접속 명령(ssh <span class="ph v-user">ras</span>@IP)을 요약해줘.</pre></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step" id="s3">
+        <div class="num">3</div>
+        <div>
+          <h3>이미지 다운로드와 체크섬 확인</h3>
+          <p>Claude Code가 이미지를 받고 SHA256 값을 비교해 보여줍니다. 두 값이 같다는 결과만 확인하면 됩니다. 이미지는 1GB가 넘어서 네트워크에 따라 몇 분 걸립니다.</p>
+          <div class="note">체크섬은 파일이 받는 중에 깨지지 않았는지 확인하는 <b>지문</b> 같은 값입니다. 값이 다르면 다시 받아야 합니다.</div>
+        </div>
+      </div>
+
+      <div class="step" id="s4">
+        <div class="num">4</div>
+        <div>
+          <h3>고정 IP 승인</h3>
+          <p>Claude Code가 네트워크 정보와 IP 후보를 보여줍니다. 아래 세 가지를 확인하고 승인하세요.</p>
+          <ul class="check">
+            <li>후보 IP가 노트북 IP와 같은 대역인지 봅니다. 예를 들어 노트북이 192.168.0.23이면 후보도 192.168.0.x여야 합니다.</li>
+            <li><code class="inline">Test-Connection</code> 결과가 <code class="inline">False</code>여야 합니다. 응답이 오면 이미 누가 쓰고 있는 IP입니다.</li>
+            <li>게이트웨이 주소가 보통 .1 또는 .254로 끝나는지 봅니다.</li>
+          </ul>
+          <p>승인했다면 아래 칸에 입력해 두세요. 이후 명령어에 자동으로 반영됩니다.</p>
+          <div class="inputs inline">
+            <div>
+              <label for="ipInput">확정된 고정 IP</label>
+              <input id="ipInput" placeholder="예: 192.168.0.200" inputmode="decimal" autocomplete="off">
+              <div class="hint">여기에 입력하면 이 아래 명령어들에 자동으로 들어갑니다.</div>
+            </div>
+          </div>
+          <div class="note">공유기 관리 권한이 있다면 공유기의 DHCP 범위 밖 번호를 고르는 게 가장 안전합니다. 공용 네트워크라 알 수 없다면 .200 이상의 높은 번호가 대체로 안전합니다.</div>
+        </div>
+      </div>
+
+      <div class="step" id="s5">
+        <div class="num">5</div>
+        <div>
+          <h3>SD카드 확인 (가장 중요)</h3>
+          <p>Imager에서 엉뚱한 디스크를 고르지 않도록, 먼저 SD카드의 번호와 용량을 확인해 둡니다. Claude Code가 아래 명령의 결과를 보여줍니다.</p>
+          <div class="term"><div class="term-bar"><span>PowerShell 2</span><button class="copy">복사</button></div>
+<pre>Get-Disk | Where-Object BusType -in 'USB','SD' | Format-Table Number, FriendlyName, @{n='GB';e={[math]::Round($_.Size/1GB,1)}}, BusType</pre></div>
+          <div class="term"><div class="term-bar"><span>예시 출력</span></div>
+<pre>Number FriendlyName                GB BusType
+------ ------------                -- -------
+     2 Generic MassStorageClass  63.9 USB</pre></div>
+          <ul class="check">
+            <li><b>BusType이 USB 또는 SD</b>로 표시되는지 확인합니다.</li>
+            <li>용량이 SD카드 용량과 비슷한지 확인합니다. 64GB 카드는 약 63.9GB로 표시됩니다.</li>
+            <li><b>Number가 0이 아닌지</b> 확인합니다. 0번은 Windows가 설치된 내장 디스크입니다.</li>
+            <li>헷갈리면 SD카드를 뺐다가 다시 꽂고, 목록에서 사라졌다 나타나는 줄을 찾으세요.</li>
+          </ul>
+          <p>여기서 확인한 <b>이름과 용량</b>을 기억해 두세요. 다음 단계에서 Imager의 저장소 목록에서 같은 것을 고르면 됩니다.</p>
+        </div>
+      </div>
+
+      <div class="step" id="s6">
+        <div class="num">6</div>
+        <div>
+          <h3>이미지 기록 (Raspberry Pi Imager로 직접)</h3>
+          <p>Raspberry Pi Imager를 실행하고 아래 순서대로 고릅니다.</p>
+          <ul>
+            <li><b>장치</b>: Raspberry Pi 5</li>
+            <li><b>운영체제</b>: 목록 맨 아래 <b>Use custom</b>(사용자 지정 이미지 사용) → <code class="inline">%USERPROFILE%\rpi-setup</code> 폴더의 <code class="inline">ubuntu-24.04...raspi.img.xz</code> 선택</li>
+            <li><b>저장소</b>: 5단계에서 확인한 SD카드. 이름과 용량을 한 번 더 대조합니다.</li>
+            <li><b>다음</b> → “OS 사용자 지정 설정을 적용하시겠어요?”가 나오면 <b>설정 없이 계속</b>을 누릅니다.</li>
+            <li>“카드의 모든 데이터가 지워집니다” 경고에 <b>예</b>를 누르면 기록이 시작됩니다. 확인(verify)까지 보통 5~15분 걸립니다.</li>
+          </ul>
+          <div class="warn"><b>저장소 목록을 한 번 더 보세요.</b> 5단계에서 확인한 용량·이름과 다르면 진행하지 마세요. 잘못된 디스크에 쓰면 복구할 수 없습니다.</div>
+          <div class="warn"><b>“설정 없이 계속”이 중요합니다.</b> Imager에서 사용자·Wi-Fi를 설정하면 Claude Code가 쓸 cloud-init 파일과 겹쳐서 부팅이 꼬일 수 있습니다.</div>
+          <ul class="check">
+            <li>기록이 끝나면 Imager가 카드를 빼버립니다. <b>SD카드를 뽑았다가 다시 꽂으세요.</b></li>
+            <li>“이 디스크를 사용하려면 먼저 포맷해야 합니다” 팝업이 뜨면 <b>취소</b>를 누릅니다. 리눅스용 파티션이라 Windows가 못 읽는 것이고 정상입니다.</li>
+            <li>파일 탐색기에 <b>system-boot</b> 드라이브가 보이면 성공입니다. 그 드라이브 문자를 아래 칸에 입력하세요.</li>
+          </ul>
+          <div class="inputs inline">
+            <div>
+              <label for="driveInput">system-boot 드라이브 문자</label>
+              <input id="driveInput" placeholder="예: D" autocomplete="off" spellcheck="false">
+              <div class="hint">SD카드가 잡힌 드라이브 문자입니다 (D: → D).</div>
+            </div>
+          </div>
+          <p>기록이 끝나고 카드를 다시 꽂았으면 Claude Code에 <b>“완료”</b>라고 알려줍니다.</p>
+          <div class="note"><b>명령으로 기록하고 싶다면</b> 관리자 권한 PowerShell에서 아래처럼도 됩니다. <code class="inline">PhysicalDrive</code> 뒤 숫자는 5단계의 Number입니다. 숫자를 틀리면 그 디스크가 지워지니, 익숙하지 않다면 위의 Imager 방법을 쓰세요.
+          <div class="term"><div class="term-bar"><span>관리자 PowerShell</span><button class="copy">복사</button></div>
+<pre>&amp; "${env:ProgramFiles(x86)}\Raspberry Pi Imager\rpi-imager.exe" --cli "$env:USERPROFILE\rpi-setup\ubuntu-24.04-preinstalled-server-arm64+raspi.img.xz" "\\.\PhysicalDrive2"</pre></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step" id="s7">
+        <div class="num">7</div>
+        <div>
+          <h3>설정 파일 확인 후 꺼내기</h3>
+          <p>Claude Code가 user-data와 network-config를 작성해 보여줍니다. 직접 한 번 더 확인하고 싶다면 두 번째 PowerShell 창에서 실행하세요.</p>
+          <div class="term"><div class="term-bar"><span>PowerShell 2</span><button class="copy">복사</button></div>
+<pre>Get-Content <span class="ph v-drive">D</span>:\user-data -TotalCount 3
+Get-Content <span class="ph v-drive">D</span>:\network-config</pre></div>
+          <ul class="check">
+            <li>user-data 첫 줄이 <code class="inline">#cloud-config</code>입니다.</li>
+            <li>network-config에 <code class="inline"><span class="ph v-ip">고정IP</span>/24</code> 같은 주소, <code class="inline">IOTCOSS1_5G</code>, <code class="inline">regulatory-domain: KR</code>이 들어 있습니다.</li>
+            <li>SSID 대소문자와 밑줄(<code class="inline">_5G</code>)이 정확합니다. 한 글자라도 틀리면 연결되지 않습니다.</li>
+          </ul>
+          <p>Windows가 줄바꿈을 자기 방식(CRLF)으로 넣었으면 첫 부팅이 실패할 수 있습니다. 아래 명령이 <code class="inline">OK</code>를 출력해야 합니다.</p>
+          <div class="term"><div class="term-bar"><span>PowerShell 2</span><button class="copy">복사</button></div>
+<pre>'user-data','network-config' | ForEach-Object { $f="<span class="ph v-drive">D</span>:\$_"; if ((Get-Content -Raw $f) -match "`r") { "$_ : CRLF 있음 - 다시 저장해야 함" } else { "$_ : OK" } }</pre></div>
+          <p>확인이 끝나면 저장 내용을 카드에 확실히 밀어 넣고 꺼냅니다.</p>
+          <div class="term"><div class="term-bar"><span>PowerShell 2</span><button class="copy">복사</button></div>
+<pre>Write-VolumeCache -DriveLetter <span class="ph v-drive">D</span></pre></div>
+          <p>그다음 파일 탐색기에서 <b>system-boot</b> 드라이브를 우클릭 → <b>꺼내기</b>를 누르고 카드를 뽑습니다.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= PART B ================= -->
+    <section class="part">
+      <div class="part-head"><span class="tag">B</span><h2>부팅과 원격 접속</h2></div>
+
+      <div class="step" id="s8">
+        <div class="num">8</div>
+        <div>
+          <h3>첫 부팅</h3>
+          <ul>
+            <li>microSD 카드를 라즈베리파이5 뒷면 슬롯에 끼웁니다.</li>
+            <li>전원을 연결합니다. 공식 27W(5V 5A) USB-C 어댑터를 권장합니다. 일반 충전기를 쓰면 USB 전력이 제한된다는 경고가 뜰 수 있습니다.</li>
+            <li><b>5분 정도 기다립니다.</b> 첫 부팅 때 cloud-init이 사용자 생성, Wi-Fi 설정, avahi 설치를 진행합니다. 이 동안 초록 LED가 불규칙하게 깜빡입니다. 중간에 전원을 뽑지 마세요.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="step" id="s9">
+        <div class="num">9</div>
+        <div>
+          <h3>SSH 접속</h3>
+          <p>노트북이 같은 Wi-Fi(IOTCOSS1_5G)에 연결되어 있는지 확인한 뒤, 먼저 응답이 오는지 봅니다.</p>
+          <div class="term"><div class="term-bar"><span>노트북 PowerShell</span><button class="copy">복사</button></div>
+<pre>ping -n 3 <span class="ph v-ip">고정IP</span></pre></div>
+          <p>응답이 오면 접속합니다.</p>
+          <div class="term"><div class="term-bar"><span>노트북 PowerShell</span><button class="copy">복사</button></div>
+<pre>ssh <span class="ph v-user">ras</span>@<span class="ph v-ip">고정IP</span></pre></div>
+          <ul>
+            <li>처음 접속하면 <code class="inline">Are you sure you want to continue connecting</code>가 나옵니다. <b>yes</b>를 입력합니다.</li>
+            <li>비밀번호 <b class="ph v-pass">ras</b>를 입력합니다. 화면에는 표시되지 않습니다.</li>
+            <li>프롬프트가 <code class="inline"><span class="ph v-user">ras</span>@<span class="ph v-host">ras</span>:~$</code>로 바뀌면 접속 성공입니다.</li>
+          </ul>
+          <p>IP 대신 이름으로도 접속할 수 있습니다. avahi 설치가 끝난 뒤부터 되고, Windows에서는 안 될 때도 있습니다.</p>
+          <div class="term"><div class="term-bar"><span>노트북 PowerShell</span><button class="copy">복사</button></div>
+<pre>ssh <span class="ph v-user">ras</span>@<span class="ph v-host">ras</span>.local</pre></div>
+        </div>
+      </div>
+
+      <div class="step" id="s10">
+        <div class="num">10</div>
+        <div>
+          <h3>접속 후 점검</h3>
+          <p>라즈베리파이에 접속한 상태에서 아래를 차례로 실행합니다.</p>
+          <div class="term"><div class="term-bar"><span>라즈베리파이 (<span class="v-user">ras</span>@<span class="v-host">ras</span>)</span><button class="copy">복사</button></div>
+<pre>cloud-init status --wait        <span class="c"># status: done 이 나와야 함</span>
+hostname                        <span class="c"># <span class="ph v-host">ras</span></span>
+ip -4 addr show wlan0           <span class="c"># 고정 IP가 잡혔는지 확인</span>
+ping -c 3 8.8.8.8               <span class="c"># 인터넷 연결 확인</span>
+sudo apt update &amp;&amp; sudo apt full-upgrade -y
+sudo reboot</pre></div>
+          <p>업데이트는 처음에 10분 이상 걸릴 수 있습니다. 재부팅 후 1분쯤 지나 다시 접속하세요.</p>
+          <div class="note">비밀번호 <b class="ph v-pass">ras</b>는 공용 네트워크에서 쉽게 뚫립니다. 접속한 뒤 <code class="inline">passwd</code>로 더 긴 비밀번호로 바꾸는 걸 권장합니다.</div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ================= TROUBLE ================= -->
+    <section class="part" id="trouble">
+      <div class="part-head"><span class="tag">?</span><h2>문제 해결</h2></div>
+
+      <details>
+        <summary><span>ssh 명령을 찾을 수 없다고 나옴</span></summary>
+        <div class="body">
+          <p>Windows에 SSH 클라이언트가 꺼져 있는 경우입니다. <b>설정 → 시스템 → 옵션 기능 → 기능 보기</b>에서 <b>OpenSSH 클라이언트</b>를 추가하세요. 관리자 PowerShell에서 아래 명령으로도 됩니다.</p>
+          <div class="term"><div class="term-bar"><span>관리자 PowerShell</span><button class="copy">복사</button></div>
+<pre>Add-WindowsCapability -Online -Name OpenSSH.Client~~~~0.0.1.0</pre></div>
+        </div>
+      </details>
+
+      <details>
+        <summary><span>Claude Code가 관리자 권한이 필요한 명령에서 멈춰 있음</span></summary>
+        <div class="body">
+          <p>Claude Code 안에서는 관리자 권한 승인 창을 누를 수 없습니다. <kbd>Esc</kbd>로 멈춘 뒤 “관리자 권한이 필요한 명령은 명령어만 알려줘”라고 다시 요청하고, 관리자 권한으로 띄운 두 번째 PowerShell 창에서 직접 실행하세요.</p>
+        </div>
+      </details>
+
+      <details>
+        <summary><span>Imager의 저장소 목록에 SD카드가 안 보임</span></summary>
+        <div class="body">
+          <p>카드 리더기를 뺐다가 다시 꽂고, USB 허브를 거치지 말고 노트북에 직접 연결해 보세요. <code class="inline">Get-Disk</code> 결과에도 안 보이면 리더기나 카드 문제입니다. Imager를 관리자 권한으로 실행하면 잡히는 경우도 있습니다.</p>
+        </div>
+      </details>
+
+      <details>
+        <summary><span>기록 후 system-boot 드라이브가 보이지 않음</span></summary>
+        <div class="body">
+          <p>Imager가 기록 후 카드를 빼기 때문입니다. SD카드를 뽑았다가 다시 꽂으세요. “포맷해야 합니다” 팝업은 <b>취소</b>를 누릅니다. 그래도 안 보이면 아래로 확인하세요.</p>
+          <div class="term"><div class="term-bar"><span>PowerShell</span><button class="copy">복사</button></div>
+<pre>Get-Volume -FileSystemLabel system-boot</pre></div>
+          <p>드라이브 문자가 비어 있으면 <b>디스크 관리</b>(Win+X → 디스크 관리)에서 system-boot 파티션에 문자를 지정하면 됩니다.</p>
+        </div>
+      </details>
+
+      <details>
+        <summary><span>부팅했는데 사용자도 Wi-Fi도 설정이 안 되어 있음</span></summary>
+        <div class="body">
+          <p>설정 파일이 Windows 방식(CRLF 줄바꿈, BOM)으로 저장되면 cloud-init이 읽지 못할 수 있습니다. SD카드를 다시 꽂고 7단계의 확인 명령을 실행해 보세요. <code class="inline">CRLF 있음</code>이 나오면 Claude Code에 “user-data와 network-config를 LF, BOM 없는 UTF-8로 다시 저장해줘”라고 요청하세요.</p>
+          <p>Imager의 OS 사용자 지정 설정을 함께 쓴 경우에도 충돌할 수 있습니다. 그럴 때는 6단계를 “설정 없이 계속”으로 다시 진행하세요.</p>
+        </div>
+      </details>
+
+      <details>
+        <summary><span>ping에 응답이 전혀 없음</span></summary>
+        <div class="body">
+          <p>먼저 2~3분 더 기다리고, 그래도 안 되면 전원을 한 번 껐다 켜세요. Ubuntu는 첫 부팅 때 Wi-Fi가 늦게 잡히는 경우가 있어 재부팅으로 해결되는 일이 많습니다.</p>
+          <p>계속 안 되면 모니터와 키보드를 연결해 <span class="ph v-user">ras</span> / <span class="ph v-pass">ras</span>로 로그인한 뒤 확인합니다.</p>
+          <div class="term"><div class="term-bar"><span>라즈베리파이 (직접 연결)</span><button class="copy">복사</button></div>
+<pre>ip a show wlan0
+sudo cat /etc/netplan/50-cloud-init.yaml
+sudo netplan apply</pre></div>
+          <p>wlan0에 IP가 잡혀 있는데도 노트북에서 접속이 안 된다면, 네트워크에 AP 격리(기기끼리 통신 차단)가 켜져 있을 수 있습니다. 네트워크 관리자에게 문의하거나 랜선을 노트북과 직접 연결해 우회하세요.</p>
+        </div>
+      </details>
+
+      <details>
+        <summary><span>Permission denied (비밀번호가 틀렸다고 나옴)</span></summary>
+        <div class="body">
+          <p>cloud-init이 아직 사용자를 만들지 않았을 가능성이 큽니다. 몇 분 더 기다린 뒤 다시 시도하세요. 그래도 안 되면 SD카드를 노트북에 다시 꽂아 user-data의 첫 줄이 <code class="inline">#cloud-config</code>인지, 들여쓰기가 맞는지 확인합니다.</p>
+        </div>
+      </details>
+
+      <details>
+        <summary><span>REMOTE HOST IDENTIFICATION HAS CHANGED 경고</span></summary>
+        <div class="body">
+          <p>SD카드를 새로 구우면 서버 키가 바뀌어서 나오는 경고입니다. 예전 기록을 지우고 다시 접속하세요.</p>
+          <div class="term"><div class="term-bar"><span>노트북 PowerShell</span><button class="copy">복사</button></div>
+<pre>ssh-keygen -R <span class="ph v-ip">고정IP</span>
+ssh-keygen -R <span class="ph v-host">ras</span>.local</pre></div>
+        </div>
+      </details>
+
+      <details>
+        <summary><span><span class="ph v-host">ras</span>.local로는 접속이 안 되고 IP로는 됨</span></summary>
+        <div class="body">
+          <p>Windows는 <code class="inline">.local</code> 이름 찾기(mDNS)가 불안정합니다. 고정 IP로 접속하는 게 가장 편합니다.</p>
+          <p>이름으로 꼭 접속하고 싶다면 Apple의 Bonjour(Bonjour Print Services for Windows)를 설치하면 대체로 해결됩니다. 라즈베리파이 쪽에 avahi가 빠졌을 수도 있으니 IP로 접속한 뒤 <code class="inline">sudo apt install -y avahi-daemon</code>도 확인하세요.</p>
+        </div>
+      </details>
+
+      <details>
+        <summary><span>터미널에서는 되는데 VS Code만 연결이 안 됨</span></summary>
+        <div class="body">
+          <p>먼저 PowerShell에서 <code class="inline">ssh <span class="ph v-host">ras</span></code>가 되는지 확인하세요. 그게 된다면 VS Code의 Remote - SSH 확장이 다른 ssh를 쓰고 있을 수 있습니다. 설정에서 <code class="inline">remote.SSH.path</code>를 <code class="inline">C:\Windows\System32\OpenSSH\ssh.exe</code>로 지정하고 VS Code를 다시 실행하세요.</p>
+          <p>회사·학교 노트북이라면 방화벽이나 보안 프로그램이 막는 경우도 있습니다.</p>
+        </div>
+      </details>
+
+      <details>
+        <summary><span>고정 IP가 다른 기기와 충돌함</span></summary>
+        <div class="body">
+          <p>SD카드를 노트북에 꽂고 <code class="inline"><span class="ph v-drive">D</span>:\network-config</code>의 addresses만 다른 번호로 바꾸면 됩니다. 이미 부팅한 뒤라면 라즈베리파이에서 <code class="inline">/etc/netplan/50-cloud-init.yaml</code>을 수정하고 <code class="inline">sudo netplan apply</code>를 실행하세요.</p>
+        </div>
+      </details>
+    </section>
+
+    <!-- ================= GUI ================= -->
+    <section class="part" id="gui">
+      <div class="part-head"><span class="tag">+</span><h2>대안: Imager 설정만으로 하기</h2></div>
+      <p style="max-width:68ch">Claude Code 과정이 막히면 Imager의 설정 기능만으로도 대부분 됩니다. 장치는 <b>Raspberry Pi 5</b>, OS는 <b>Other general-purpose OS → Ubuntu → Ubuntu Server 24.04.x LTS (64-bit)</b>를 고릅니다. 저장소에서 SD카드를 선택한 뒤 <b>OS 사용자 지정 설정</b>에서 hostname, 사용자, 비밀번호, Wi-Fi(SSID·비밀번호·국가 KR), SSH 사용을 설정하세요.</p>
+      <p style="max-width:68ch">이 방법에는 고정 IP 항목이 없습니다. 기록이 끝난 뒤 SD카드를 다시 꽂고 <code class="inline"><span class="ph v-drive">D</span>:\network-config</code>를 메모장 대신 VS Code로 열어(줄바꿈을 LF로 유지해야 합니다) <code class="inline">dhcp4: false</code>와 addresses, routes, nameservers를 직접 추가하면 됩니다.</p>
+      <div class="warn" style="max-width:68ch">Windows 기본 <b>메모장</b>으로 저장하면 줄바꿈이 CRLF로 바뀌어 부팅이 실패할 수 있습니다. VS Code나 Notepad++처럼 줄바꿈 방식(LF)을 지정할 수 있는 편집기를 쓰세요.</div>
+    </section>
+  </main>
+</div>
+
+<footer>
+  Raspberry Pi 5 (8GB) · Ubuntu Server 24.04 LTS · cloud-init 기반 설정 · Windows 11 기준
+</footer>
+
+<script>
+(function(){
+  function apply(cls,val,fallback){
+    document.querySelectorAll('.'+cls).forEach(el=>{
+      // 상단 '이번 설정값' 판은 사용자가 입력하기 전까지 비워 둔다
+      el.textContent=val||(el.closest('.specs')?'':fallback);
+      el.classList.toggle('set',!!val);
+    });
+  }
+
+  // [입력칸 id, 바꿔 넣을 클래스, 비었을 때 보여줄 값, 입력값 정리 함수]
+  const FIELDS=[
+    ['hostInput','v-host','ras',   v=>v.toLowerCase().replace(/[^a-z0-9-]/g,'')],
+    ['userInput','v-user','ras',   v=>v.toLowerCase().replace(/[^a-z0-9_-]/g,'')],
+    ['passInput','v-pass','ras',   v=>v.replace(/\s/g,'')],
+    ['ipInput',  'v-ip', '고정IP', v=>v.replace(/[^0-9.]/g,'')],
+    ['driveInput','v-drive','D',   (v,el)=>{
+      v=v.replace(/[^a-zA-Z]/g,'').slice(0,1).toUpperCase();
+      if(v==='C'){el.setCustomValidity('C 드라이브는 Windows가 설치된 곳입니다');el.reportValidity();return '';}
+      el.setCustomValidity('');return v;
+    }]
+  ];
+  FIELDS.forEach(([id,cls,fallback,clean])=>{
+    const el=document.getElementById(id);
+    const run=()=>apply(cls,clean(el.value.trim(),el),fallback);
+    el.addEventListener('input',run);
+    run();
+  });
+
+  function fallbackCopy(text){
+    const ta=document.createElement('textarea');
+    ta.value=text;ta.style.position='fixed';ta.style.opacity='0';
+    document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');}catch(e){}
+    document.body.removeChild(ta);
+  }
+  document.querySelectorAll('.copy').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const pre=btn.closest('.term').querySelector('pre');
+      // strip trailing comments marked with .c
+      const clone=pre.cloneNode(true);
+      clone.querySelectorAll('.c').forEach(c=>c.remove());
+      const text=clone.textContent.split('\n').map(l=>l.replace(/\s+$/,'')).join('\n');
+      const done=()=>{btn.textContent='복사됨';btn.classList.add('done');
+        setTimeout(()=>{btn.textContent='복사';btn.classList.remove('done');},1500);};
+      if(navigator.clipboard&&window.isSecureContext){
+        navigator.clipboard.writeText(text).then(done,()=>{fallbackCopy(text);done();});
+      }else{fallbackCopy(text);done();}
+    });
+  });
+})();
+</script>
+</body>
+</html>
