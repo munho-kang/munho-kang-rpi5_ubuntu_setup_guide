@@ -174,7 +174,7 @@
       <div class="spec"><div class="k">OS</div><div class="v">Ubuntu 24.04</div></div>
       <div class="spec"><div class="k">Hostname</div><div class="v"><span class="v-host">ras</span></div></div>
       <div class="spec"><div class="k">사용자 / 비밀번호</div><div class="v"><span class="v-user">ras</span><span class="v-sep"> / </span><span class="v-pass">ras</span></div></div>
-      <div class="spec"><div class="k">Wi-Fi</div><div class="v">IOTCOSS1_5G</div></div>
+      <div class="spec"><div class="k">Wi-Fi</div><div class="v">IOTCOSS1-5G</div></div>
       <div class="spec"><div class="k">Wi-Fi 비밀번호</div><div class="v">Coss0603</div></div>
     </div>
     <div class="inputs-cue">입력하는 창 <span class="arrow">↓</span></div>
@@ -233,7 +233,7 @@
         <div>
           <h3>준비하기</h3>
           <ul class="check">
-            <li>노트북을 <b>IOTCOSS1_5G</b>에 연결합니다. 고정 IP 대역을 이 네트워크에서 읽어오기 때문입니다.</li>
+            <li>노트북을 <b>IOTCOSS1-5G</b>에 연결합니다. 고정 IP 대역을 이 네트워크에서 읽어오기 때문입니다.</li>
             <li>VPN이 켜져 있다면 끕니다. 네트워크 정보가 틀리게 읽힐 수 있습니다.</li>
             <li>microSD 카드를 노트북(또는 카드 리더기)에 꽂습니다. 카드 안의 데이터는 전부 지워집니다.</li>
             <li><b>PowerShell 창을 두 개</b> 준비합니다. 하나는 Claude Code용, 하나는 명령을 직접 실행할 용도입니다. Windows Terminal을 쓰면 탭으로 나눌 수 있어 편합니다.</li>
@@ -277,7 +277,7 @@ claude</pre></div>
   불일치하면 중단해.
 
 [2단계: 고정 IP 결정]
-- 노트북은 지금 IOTCOSS1_5G에 연결되어 있어.
+- 노트북은 지금 IOTCOSS1-5G에 연결되어 있어.
   `Get-NetIPConfiguration -Detailed`로 노트북 IP, 프리픽스 길이, 게이트웨이, DNS를 확인해서 보여줘.
 - 같은 대역에서 끝자리가 높은 번호(예: .200)를 고정 IP 후보로 제안하고,
   `Test-Connection -Count 2 후보IP`와 `arp -a`로 이미 쓰고 있지 않은지 확인해줘.
@@ -317,7 +317,7 @@ network-config (netplan v2 형식):
 - routes: to: default, via: 게이트웨이 (gateway4는 deprecated라 사용 금지)
 - nameservers: 게이트웨이, 8.8.8.8
 - regulatory-domain: KR
-- access-points: "IOTCOSS1_5G", password: "Coss0603"
+- access-points: "IOTCOSS1-5G", password: "Coss0603"
 
 [5단계: 검증 및 마무리]
 - 작성한 user-data와 network-config 전체 내용을 보여주고 YAML 문법을 검사해줘.
@@ -426,8 +426,8 @@ network-config (netplan v2 형식):
 Get-Content <span class="ph v-drive">D</span>:\network-config</pre></div>
           <ul class="check">
             <li>user-data 첫 줄이 <code class="inline">#cloud-config</code>입니다.</li>
-            <li>network-config에 <code class="inline"><span class="ph v-ip">고정IP</span>/24</code> 같은 주소, <code class="inline">IOTCOSS1_5G</code>, <code class="inline">regulatory-domain: KR</code>이 들어 있습니다.</li>
-            <li>SSID 대소문자와 밑줄(<code class="inline">_5G</code>)이 정확합니다. 한 글자라도 틀리면 연결되지 않습니다.</li>
+            <li>network-config에 <code class="inline"><span class="ph v-ip">고정IP</span>/24</code> 같은 주소, <code class="inline">IOTCOSS1-5G</code>, <code class="inline">regulatory-domain: KR</code>이 들어 있습니다.</li>
+            <li>SSID 대소문자와 하이픈(<code class="inline">-5G</code>)이 정확합니다. 한 글자라도 틀리면 연결되지 않습니다.</li>
           </ul>
           <p>Windows가 줄바꿈을 자기 방식(CRLF)으로 넣었으면 첫 부팅이 실패할 수 있습니다. 아래 명령이 <code class="inline">OK</code>를 출력해야 합니다.</p>
           <div class="term"><div class="term-bar"><span>PowerShell 2</span><button class="copy">복사</button></div>
@@ -460,7 +460,7 @@ Get-Content <span class="ph v-drive">D</span>:\network-config</pre></div>
         <div class="num">9</div>
         <div>
           <h3>SSH 접속</h3>
-          <p>노트북이 같은 Wi-Fi(IOTCOSS1_5G)에 연결되어 있는지 확인한 뒤, 먼저 응답이 오는지 봅니다.</p>
+          <p>노트북이 같은 Wi-Fi(IOTCOSS1-5G)에 연결되어 있는지 확인한 뒤, 먼저 응답이 오는지 봅니다.</p>
           <div class="term"><div class="term-bar"><span>노트북 PowerShell</span><button class="copy">복사</button></div>
 <pre>ping -n 3 <span class="ph v-ip">고정IP</span></pre></div>
           <p>응답이 오면 접속합니다.</p>
